@@ -21,12 +21,6 @@
 #define assert_(A)
 #endif
 
-#define MATRIXSIZE 5000
-
-double a[MATRIXSIZE][MATRIXSIZE];
-double b[MATRIXSIZE][MATRIXSIZE];
-double c[MATRIXSIZE][MATRIXSIZE];
-
 /*
  *
  * CANDIDATES.
@@ -347,141 +341,61 @@ void read_board(FILE *f, struct board *b)
 	}
 }
 
-double
-fun1(double a, double b)
-{
-	return (1 * a * b);
-}
-
-double
-fun2(double a, double b)
-{
-	return (2 * a * b);
-}
-
-double
-fun3(double a, double b)
-{
-	return (3 * a * b);
-}
-
-double
-fun4(double a, double b)
-{
-	return (4 * a * b);
-}
-
-double
-fun5(double a, double b)
-{
-	return (5 * a * b);
-}
-
-
-double
-fun6(double a, double b)
-{
-	return (6 * a * b);
-}
-
-double
-fun7(double a, double b)
-{
-	return (7 * a * b);
-}
-
-double
-fun8(double a, double b)
-{
-	return (8 * a * b);
-}
-
-double
-fun9(double a, double b)
-{
-	return (9 * a * b);
-}
-
-void ReduceIPC()
-{
-	int rows, cols, temp;
-
-	for (rows = 0; rows < MATRIXSIZE; rows++) {
-		for (cols = 0; cols < MATRIXSIZE; cols++) {
-			temp = rand() % 9;
-
-			switch(temp) {
-				case 1:
-					c[rows][cols] = fun1(a[rows][cols], b[rows][cols]);
-					break;
-				case 2:
-					c[rows][cols] = fun2(a[rows][cols], b[rows][cols]);
-					break;
-				case 3:
-					c[rows][cols] = fun3(a[rows][cols], b[rows][cols]);
-					break;
-				case 4:
-					c[rows][cols] = fun4(a[rows][cols], b[rows][cols]);
-					break;
-				case 5:
-					c[rows][cols] = fun5(a[rows][cols], b[rows][cols]);
-					break;
-				case 6:
-					c[rows][cols] = fun6(a[rows][cols], b[rows][cols]);
-					break;
-				case 7:
-					c[rows][cols] = fun7(a[rows][cols], b[rows][cols]);
-					break;
-				case 8:
-					c[rows][cols] = fun8(a[rows][cols], b[rows][cols]);
-					break;
-				case 9:
-					c[rows][cols] = fun9(a[rows][cols], b[rows][cols]);
-					break;
-				default: break; 
-			}
-		}
-	}
-}
-
 /*
  *
  * MAIN PROGRAM.
  *
  */
 
+void pgfault(){
+	size_t bufsize = sizeof(double) * 136870912;
+
+	double* pBigArray = (double*)malloc(bufsize);
+
+	double lfBigChecksum = 0.0;
+	int count = 40961000;
+	while(--count>0){
+		int iIndex = rand() % count;
+		lfBigChecksum += pBigArray[iIndex];
+	}
+}
+
 int main(int argc, char *argv[])
 {
 	FILE *in;
 	struct board b;
 
-	int ret, count;
+	int ret;
 
 	if (argc > 2) {
 		fprintf(stderr, "ERROR: too many arguments\n");
 		return 1;
 	}
-    for (count = 0; count < 6000; count++) {
-	    if (argc == 2) {
-		    in = fopen(argv[1], "r");
-		    if (in == NULL) {
-			    fprintf(stderr, "ERROR: could not open \"%s\"\n", argv[1]);
-			    return 2;
-		    }
-	    } else {
-		    in = stdin;
-	    }
 
-	    init_board(&b);
+	if (argc == 2) {
+		in = fopen(argv[1], "r");
+		if (in == NULL) {
+			fprintf(stderr, "ERROR: could not open \"%s\"\n", argv[1]);
+			return 2;
+		}
+	} else {
+		in = stdin;
+	}
 
-	    read_board(in, &b);
-	    ret = solve_board(&b, MIN_NUM, MIN_NUM);
+	/* Initialize data structures. */
+	init_board(&b);
 
-	    fclose(in);
-    }
+	/* Read and solve board. */
+	read_board(in, &b);
+	ret = solve_board(&b, MIN_NUM, MIN_NUM);
+
+	/* Close input and return. */
+	fclose(in);
+
+	pgfault();
+
 	if (! ret)
 		fprintf(stderr, "ERROR: board could not be solved\n");
 
-	ReduceIPC();
 	return (ret?0:3);
 }
